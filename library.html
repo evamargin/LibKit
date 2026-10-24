@@ -13,23 +13,30 @@
 .top .count{color:var(--ink-soft); font-size:.85rem; white-space:nowrap}
 .top .sp{flex:1 1 auto}
 .badge{display:inline-block; min-width:1.4em; text-align:center; font-size:.72rem; padding:0 .35em; border-radius:999px; background:var(--red); color:#fff; margin-left:.3rem}
-.tagbar{padding:.5rem 1rem; border-bottom:1px solid var(--rule); display:flex; gap:.4rem .35rem; flex-wrap:wrap; align-items:center; font-size:.85rem}
-.tagbar .kind{color:var(--ink-soft); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; margin:0 .2rem 0 .6rem}
-.tagbar .kind:first-child{margin-left:0}
-.tagbar .n{opacity:.6; margin-left:.25rem; font-size:.68rem}
-.tagbar .ctl{margin-left:auto; display:flex; gap:.6rem; align-items:center; color:var(--ink-soft); font-size:.8rem}
-.tagbar label{display:flex; gap:.3rem; align-items:center; cursor:pointer}
-main{padding:0 1rem 4rem}
-.row{display:grid; grid-template-columns:auto 1fr auto; gap:.3rem .8rem; padding:.55rem 0; border-bottom:1px solid var(--rule); align-items:start}
+.layout{display:grid; grid-template-columns:250px minmax(0,1fr); gap:0 1.4rem; align-items:start}
+aside.tagbar{position:sticky; top:3.4rem; max-height:calc(100vh - 3.4rem - 3rem); overflow:auto; padding:.8rem 0 .8rem 1rem; border-right:1px solid var(--rule); font-size:.9rem}
+.tagbar .kind{color:var(--ink-soft); font-size:.72rem; text-transform:uppercase; letter-spacing:.1em; margin:.9rem 0 .35rem; font-weight:500}
+.tagbar .kind:first-child{margin-top:0}
+.tagbar .trow{display:flex; align-items:center; gap:.4rem; margin:.22rem 0}
+.tagbar .trow .n{margin-left:auto; color:var(--ink-soft); font-size:.74rem; font-variant-numeric:tabular-nums; padding-right:.6rem}
+.tagbar .ctl{display:flex; flex-direction:column; gap:.35rem; margin-top:1rem; padding-top:.8rem; border-top:1px solid var(--rule); color:var(--ink-soft); font-size:.82rem}
+.tagbar label{display:flex; gap:.35rem; align-items:center; cursor:pointer}
+@media (max-width:900px){ .layout{display:block} aside.tagbar{position:static; max-height:none; border-right:0; border-bottom:1px solid var(--rule); padding:.6rem 1rem} .tagbar .trow{display:inline-flex; margin:.15rem .2rem} .tagbar .trow .n{padding-right:0} .tagbar .kind{display:block} }
+main{padding:0 1rem 4rem 0; min-width:0}
+.row{display:grid; grid-template-columns:auto 3.2rem 1fr auto; gap:.3rem .7rem; padding:.7rem 0; border-bottom:1px solid var(--rule); align-items:start}
+.row:hover{background:var(--paper-2)}
 .row.nopdf .t{color:var(--ink-soft)}
-.row .t{font-weight:500; cursor:pointer}
+.row .y{font-weight:700; font-variant-numeric:tabular-nums; padding-top:.1rem}
+.row .t{font-weight:600; font-size:1.02rem; line-height:1.35; cursor:pointer}
 .row .t:hover{text-decoration:underline; text-decoration-color:var(--blue)}
-.row .m{color:var(--ink-soft); font-size:.8rem; margin-top:.15rem; display:flex; gap:.5rem; flex-wrap:wrap; align-items:center}
+.row .m{color:var(--ink-soft); font-size:.82rem; margin-top:.3rem; display:flex; gap:.5rem .6rem; flex-wrap:wrap; align-items:center}
+.row .m .j{color:var(--ink)}
 .row .m .key{font-size:.74rem}
+.row .m .tag{font-size:.78rem; padding:.05rem .5rem; cursor:pointer}
 .row .acts{display:flex; gap:.35rem; flex-wrap:wrap; justify-content:flex-end}
 .row .acts button{font-size:.76rem; padding:.18rem .5rem}
 .row input[type=checkbox]{margin-top:.35rem}
-.row .detail{grid-column:2 / 4; display:none; padding:.4rem 0 .2rem; border-top:1px dashed var(--rule); margin-top:.4rem}
+.row .detail{grid-column:2 / 5; display:none; padding:.4rem 0 .2rem; border-top:1px dashed var(--rule); margin-top:.4rem}
 .row.open .detail{display:block}
 .detail .abs{font-size:.86rem; color:var(--ink-soft); max-width:80ch; margin:.3rem 0 .6rem}
 .detail textarea{width:100%; min-height:70px; resize:vertical}
@@ -55,7 +62,7 @@ main{padding:0 1rem 4rem}
 .inline-form{display:inline-flex; gap:.3rem; align-items:center; flex-wrap:wrap}
 .inline-form input{font-size:.8rem; padding:.2rem .4rem}
 kbd{font-size:.7rem}
-@media (max-width:700px){ .row{grid-template-columns:auto 1fr} .row .acts{grid-column:1 / 3; justify-content:flex-start} .row .detail{grid-column:1 / 3} }
+@media (max-width:700px){ .row{grid-template-columns:auto 3rem 1fr} .row .acts{grid-column:1 / 4; justify-content:flex-start} .row .detail{grid-column:1 / 4} }
 </style>
 </head>
 <body>
@@ -64,7 +71,7 @@ kbd{font-size:.7rem}
   <input type="search" id="q" placeholder="search title, author, year, key   ( / )" autocomplete="off">
   <span class="count" id="count"></span>
   <span class="sp"></span>
-  <button id="viewList" class="primary" title="list">list</button>
+  <button id="viewList" class="on" title="list">list</button>
   <button id="viewGraph" title="graph">graph</button>
   <button id="btnInbox" title="PDFs in papers/pdf without text or note">inbox<span class="badge" id="inboxN" hidden>0</span></button>
   <button id="btnDupes" title="suspected duplicates">dupes</button>
@@ -73,8 +80,8 @@ kbd{font-size:.7rem}
   <button id="btnTheme" title="light / dark">◐</button>
 </header>
 
-<div class="tagbar" id="tagbar"></div>
-
+<div class="layout">
+<aside class="tagbar" id="tagbar"></aside>
 <main>
   <div class="panel" id="inbox"></div>
   <div class="panel" id="dupes"></div>
@@ -91,6 +98,7 @@ kbd{font-size:.7rem}
     <div class="ginfo" id="ginfo"></div>
   </div>
 </main>
+</div>
 
 <footer class="foot">
   <label><input type="checkbox" id="selAll"> select shown</label>
@@ -115,10 +123,12 @@ kbd{font-size:.7rem}
     r.dataset.font = prefs.font||'mono'; r.dataset.size = prefs.size||'normal';
     const theme = prefs.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light');
     if(theme==='dark') r.dataset.theme='dark'; else r.removeAttribute('data-theme');
+    const b=(id,on)=>{ const e=document.getElementById(id); if(e) e.classList.toggle('on', !!on); };
+    b('btnFont', prefs.font==='sans'); b('btnSize', prefs.size==='big'); b('btnTheme', theme==='dark');
   }
   if(prefs.filter) state.filter = new Set(prefs.filter); if(prefs.mode) state.mode = prefs.mode; if(prefs.nopdf!==undefined) state.nopdf = prefs.nopdf; if(prefs.sort) state.sort = prefs.sort;
-  applyPrefs();
   $('#sort').value = state.sort;
+  applyPrefs();
 
   let toastT; function toast(msg, bad){ const t=$('#toast'); t.textContent=msg; t.style.background = bad ? 'var(--red)' : 'var(--ink)'; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'), 2200); }
   async function api(path, body){
@@ -169,11 +179,11 @@ kbd{font-size:.7rem}
     let h = '';
     for(const kind of ['topic','method','object']){
       const m = state.tags[kind]||{}; if(!Object.keys(m).length) continue;
-      h += `<span class="kind">${kind}</span>`;
-      for(const t of Object.keys(m).sort()) h += `<span class="tag ${kind} ${state.filter.has(t)?'on':''}" data-t="${t}" title="${esc(m[t])}">${t}<span class="n">${counts[t]||0}</span></span>`;
+      h += `<div class="kind">${kind}</div>`;
+      for(const t of Object.keys(m).sort()) h += `<div class="trow"><span class="tag ${kind} ${state.filter.has(t)?'on':''}" data-t="${t}" title="${esc(m[t])}">${t}</span><span class="n">${counts[t]||0}</span></div>`;
     }
-    h += `<span class="tag" id="addTag" title="add a tag to the vocabulary">+ tag</span>`;
-    h += `<span class="ctl"><label><input type="radio" name="mode" value="any" ${state.mode==='any'?'checked':''}> any of</label><label><input type="radio" name="mode" value="all" ${state.mode==='all'?'checked':''}> all of</label><label><input type="checkbox" id="nopdf" ${state.nopdf?'checked':''}> show no-pdf</label><button id="clearF" style="font-size:.74rem">clear</button></span>`;
+    h += `<div class="trow" style="margin-top:.5rem"><span class="tag" id="addTag" title="add a tag to the vocabulary">+ tag</span></div>`;
+    h += `<div class="ctl"><label><input type="radio" name="mode" value="any" ${state.mode==='any'?'checked':''}> any of the chosen tags</label><label><input type="radio" name="mode" value="all" ${state.mode==='all'?'checked':''}> all of them</label><label><input type="checkbox" id="nopdf" ${state.nopdf?'checked':''}> show papers without pdf</label><button id="clearF" style="font-size:.76rem; align-self:flex-start">clear filters</button></div>`;
     $('#tagbar').innerHTML = h;
     $('#tagbar').querySelectorAll('.tag[data-t]').forEach(el=>el.addEventListener('click', ()=>{ const t=el.dataset.t; state.filter.has(t)?state.filter.delete(t):state.filter.add(t); savePrefs(); renderTagbar(); render(); }));
     $('#tagbar').querySelectorAll('input[name=mode]').forEach(el=>el.addEventListener('change', ()=>{ state.mode=el.value; savePrefs(); render(); }));
@@ -181,7 +191,7 @@ kbd{font-size:.7rem}
     $('#clearF').addEventListener('click', ()=>{ state.filter.clear(); state.q=''; $('#q').value=''; savePrefs(); renderTagbar(); render(); });
     $('#addTag').addEventListener('click', ()=>{
       const el = $('#addTag');
-      el.outerHTML = `<span class="inline-form" id="addTagForm"><input id="ntName" placeholder="tag-name" size="12"><select id="ntKind"><option>topic</option><option>method</option><option>object</option></select><input id="ntMeaning" placeholder="one line meaning" size="24"><button id="ntOk" style="font-size:.74rem">add</button></span>`;
+      el.parentElement.outerHTML = `<div class="inline-form" id="addTagForm" style="flex-direction:column; align-items:stretch; gap:.3rem; padding-right:.6rem"><input id="ntName" placeholder="tag-name"><select id="ntKind"><option>topic</option><option>method</option><option>object</option></select><input id="ntMeaning" placeholder="one line meaning"><button id="ntOk" style="font-size:.76rem">add</button></div>`;
       $('#ntOk').addEventListener('click', async ()=>{
         const tag = $('#ntName').value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
         if(!tag) return;
@@ -203,9 +213,10 @@ kbd{font-size:.7rem}
     const h = items.map(p=>`
       <div class="row ${p.pdf?'':'nopdf'} ${state.open===p.key?'open':''}" data-k="${p.key}">
         <input type="checkbox" class="sel" ${state.sel.has(p.key)?'checked':''} aria-label="select">
+        <div class="y">${p.year||'—'}</div>
         <div>
           <div class="t">${esc(p.title)||'<i>untitled</i>'}</div>
-          <div class="m"><span>${esc(authorsShort(p.authors))}</span><span>${p.year||''}</span><span>${esc(p.journal||'')}</span><span class="key muted">${p.key}</span>${p.pdf?'':'<span class="pen-red">no pdf</span>'}${p.doc?'':(p.pdf?'<span class="pen-red">no text</span>':'')}<span class="rowtags">${tagChips(p)}</span></div>
+          <div class="m"><span>${esc(authorsShort(p.authors))}</span><span class="j">${esc(p.journal||'')}</span><span class="key muted">${p.key}</span>${p.pdf?'':'<span class="pen-red">no pdf</span>'}${p.doc?'':(p.pdf?'<span class="pen-red">no text</span>':'')}<span class="rowtags">${tagChips(p)}</span></div>
           <div class="detail"></div>
         </div>
         <div class="acts">
@@ -273,7 +284,7 @@ kbd{font-size:.7rem}
   let qt; $('#q').addEventListener('input', e=>{ clearTimeout(qt); qt=setTimeout(()=>{ state.q=e.target.value; render(); }, 150); });
   document.addEventListener('keydown', e=>{ if(e.key==='/' && document.activeElement.tagName!=='INPUT' && document.activeElement.tagName!=='TEXTAREA'){ e.preventDefault(); $('#q').focus(); } });
   $('#sort').addEventListener('change', e=>{ state.sort=e.target.value; savePrefs(); render(); });
-  function setView(v){ state.view=v; $('#viewList').classList.toggle('primary', v==='list'); $('#viewGraph').classList.toggle('primary', v==='graph'); $('#graphWrap').classList.toggle('show', v==='graph'); render(); }
+  function setView(v){ state.view=v; $('#viewList').classList.toggle('on', v==='list'); $('#viewGraph').classList.toggle('on', v==='graph'); $('#graphWrap').classList.toggle('show', v==='graph'); render(); }
   $('#viewList').addEventListener('click', ()=>setView('list'));
   $('#viewGraph').addEventListener('click', ()=>setView('graph'));
   $('#btnFont').addEventListener('click', ()=>{ prefs.font = prefs.font==='sans'?'mono':'sans'; applyPrefs(); savePrefs(); });
@@ -281,7 +292,7 @@ kbd{font-size:.7rem}
   $('#btnTheme').addEventListener('click', ()=>{ prefs.theme = (document.documentElement.dataset.theme==='dark')?'light':'dark'; applyPrefs(); savePrefs(); });
 
   // ---------- inbox (unprocessed pdfs) ----------
-  $('#btnInbox').addEventListener('click', async ()=>{ const p=$('#inbox'); if(p.classList.contains('show')){ p.classList.remove('show'); return; } $('#dupes').classList.remove('show'); await renderInbox(); p.classList.add('show'); });
+  $('#btnInbox').addEventListener('click', async ()=>{ const p=$('#inbox'); if(p.classList.contains('show')){ p.classList.remove('show'); $('#btnInbox').classList.remove('on'); return; } $('#dupes').classList.remove('show'); $('#btnDupes').classList.remove('on'); await renderInbox(); p.classList.add('show'); $('#btnInbox').classList.add('on'); });
   async function renderInbox(){
     const p = $('#inbox'); p.innerHTML = '<h2>inbox</h2><p class="muted">reading first pages…</p>';
     const r = await api('/api/unprocessed');
@@ -298,7 +309,7 @@ kbd{font-size:.7rem}
     p.querySelectorAll('.tags-edit .tag').forEach(el=>el.addEventListener('click', ()=>{ const on = el.parentElement.querySelectorAll('.on').length; if(!el.classList.contains('on') && on>=5) return toast('max 5', true); el.classList.toggle('on'); }));
     const jobOf = item => { const i = +item.dataset.i, it = r.items[i]; const tags=[...item.querySelectorAll('.tag.on')].map(e=>e.dataset.t); const att = item.querySelector('.attach'); return {file:it.file, tags, attach_to: (att && att.checked && it.suggest) ? it.suggest.key : (it.has_note ? it.file.replace(/\.pdf$/,'') : null)}; };
     p.querySelectorAll('.conv').forEach(b=>b.addEventListener('click', async ()=>{ const item=b.closest('.item'); try{ await api('/api/convert',{files:[jobOf(item)]}); item.remove(); toast('queued'); pollConvert(); }catch(e){ toast(e.message,true); } }));
-    $('#convAll').addEventListener('click', async ()=>{ const jobs=[...p.querySelectorAll('.item')].map(jobOf); try{ await api('/api/convert',{files:jobs}); toast(`${jobs.length} queued`); p.classList.remove('show'); pollConvert(); }catch(e){ toast(e.message,true); } });
+    $('#convAll').addEventListener('click', async ()=>{ const jobs=[...p.querySelectorAll('.item')].map(jobOf); try{ await api('/api/convert',{files:jobs}); toast(`${jobs.length} queued`); p.classList.remove('show'); $('#btnInbox').classList.remove('on'); pollConvert(); }catch(e){ toast(e.message,true); } });
   }
   let pollT;
   async function pollConvert(){
@@ -309,7 +320,7 @@ kbd{font-size:.7rem}
   }
 
   // ---------- duplicates ----------
-  $('#btnDupes').addEventListener('click', async ()=>{ const p=$('#dupes'); if(p.classList.contains('show')){ p.classList.remove('show'); return; } $('#inbox').classList.remove('show'); await renderDupes(); p.classList.add('show'); });
+  $('#btnDupes').addEventListener('click', async ()=>{ const p=$('#dupes'); if(p.classList.contains('show')){ p.classList.remove('show'); $('#btnDupes').classList.remove('on'); return; } $('#inbox').classList.remove('show'); $('#btnInbox').classList.remove('on'); await renderDupes(); p.classList.add('show'); $('#btnDupes').classList.add('on'); });
   async function renderDupes(){
     const p = $('#dupes'); const r = await api('/api/dupes'); const byKey = Object.fromEntries(state.papers.map(x=>[x.key,x]));
     if(!r.pairs.length){ p.innerHTML='<h2>duplicates</h2><p class="muted">None found by DOI or title.</p>'; return; }
