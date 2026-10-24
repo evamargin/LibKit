@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>lib</title>
+<link rel="stylesheet" href="/code/style.css">
+<style>
+/* page layout: top bar, tag bar, then list or graph. Everything else is in style.css. */
+.top{position:sticky; top:0; z-index:5; background:var(--paper); border-bottom:1px solid var(--rule); padding:.6rem 1rem; display:flex; gap:.7rem; align-items:center; flex-wrap:wrap}
+.top h1{font-size:1.1rem; margin-right:.4rem}
+.top input[type=search]{flex:1 1 220px; min-width:0}
+.top .count{color:var(--ink-soft); font-size:.85rem; white-space:nowrap}
+.top .sp{flex:1 1 auto}
+.badge{display:inline-block; min-width:1.4em; text-align:center; font-size:.72rem; padding:0 .35em; border-radius:999px; background:var(--red); color:#fff; margin-left:.3rem}
+.tagbar{padding:.5rem 1rem; border-bottom:1px solid var(--rule); display:flex; gap:.4rem .35rem; flex-wrap:wrap; align-items:center; font-size:.85rem}
+.tagbar .kind{color:var(--ink-soft); font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; margin:0 .2rem 0 .6rem}
+.tagbar .kind:first-child{margin-left:0}
+.tagbar .n{opacity:.6; margin-left:.25rem; font-size:.68rem}
+.tagbar .ctl{margin-left:auto; display:flex; gap:.6rem; align-items:center; color:var(--ink-soft); font-size:.8rem}
+.tagbar label{display:flex; gap:.3rem; align-items:center; cursor:pointer}
+main{padding:0 1rem 4rem}
+.row{display:grid; grid-template-columns:auto 1fr auto; gap:.3rem .8rem; padding:.55rem 0; border-bottom:1px solid var(--rule); align-items:start}
+.row.nopdf .t{color:var(--ink-soft)}
+.row .t{font-weight:500; cursor:pointer}
+.row .t:hover{text-decoration:underline; text-decoration-color:var(--blue)}
+.row .m{color:var(--ink-soft); font-size:.8rem; margin-top:.15rem; display:flex; gap:.5rem; flex-wrap:wrap; align-items:center}
+.row .m .key{font-size:.74rem}
+.row .acts{display:flex; gap:.35rem; flex-wrap:wrap; justify-content:flex-end}
+.row .acts button{font-size:.76rem; padding:.18rem .5rem}
+.row input[type=checkbox]{margin-top:.35rem}
+.row .detail{grid-column:2 / 4; display:none; padding:.4rem 0 .2rem; border-top:1px dashed var(--rule); margin-top:.4rem}
+.row.open .detail{display:block}
+.detail .abs{font-size:.86rem; color:var(--ink-soft); max-width:80ch; margin:.3rem 0 .6rem}
+.detail textarea{width:100%; min-height:70px; resize:vertical}
+.detail .tags-edit{display:flex; gap:.3rem; flex-wrap:wrap; margin:.4rem 0}
+.detail .lbl{font-size:.72rem; text-transform:uppercase; letter-spacing:.08em; color:var(--ink-soft); margin-top:.6rem}
+.foot{position:fixed; bottom:0; left:0; right:0; background:var(--paper); border-top:1px solid var(--rule); padding:.5rem 1rem; display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; font-size:.85rem; z-index:5}
+.foot .sp{flex:1}
+.panel{display:none; border:1px solid var(--rule); border-radius:4px; padding:.8rem 1rem; margin:1rem 0; background:var(--paper)}
+.panel.show{display:block}
+.panel h2{border:0; margin:0 0 .5rem; padding:0; font-size:1rem}
+.panel .item{display:grid; grid-template-columns:1fr auto; gap:.4rem .8rem; padding:.5rem 0; border-top:1px solid var(--rule); align-items:start}
+.panel .item .f{font-weight:500; word-break:break-all}
+.panel .item .s{font-size:.82rem; color:var(--ink-soft); margin-top:.2rem}
+.panel .item .tags-edit{display:flex; gap:.3rem; flex-wrap:wrap; margin-top:.3rem}
+.toast{position:fixed; bottom:3.2rem; right:1rem; background:var(--ink); color:var(--paper); padding:.5rem .8rem; border-radius:4px; font-size:.85rem; opacity:0; transition:opacity .2s; pointer-events:none; z-index:9}
+.toast.show{opacity:1}
+#graphWrap{display:none; height:calc(100vh - 150px); border:1px solid var(--rule); border-radius:4px; margin-top:.6rem; position:relative; overflow:hidden}
+#graphWrap.show{display:block}
+#graphWrap svg{width:100%; height:100%; display:block}
+#graphWrap .gctl{position:absolute; top:.5rem; left:.5rem; display:flex; gap:.8rem; flex-wrap:wrap; background:var(--paper); padding:.3rem .6rem; border:1px solid var(--rule); border-radius:4px; font-size:.8rem}
+#graphWrap .ginfo{position:absolute; bottom:.5rem; left:.5rem; right:.5rem; background:var(--paper); border:1px solid var(--rule); border-radius:4px; padding:.4rem .7rem; font-size:.82rem; display:none}
+#graphWrap .ginfo.show{display:block}
+.inline-form{display:inline-flex; gap:.3rem; align-items:center; flex-wrap:wrap}
+.inline-form input{font-size:.8rem; padding:.2rem .4rem}
+kbd{font-size:.7rem}
+@media (max-width:700px){ .row{grid-template-columns:auto 1fr} .row .acts{grid-column:1 / 3; justify-content:flex-start} .row .detail{grid-column:1 / 3} }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>lib</h1>
+  <input type="search" id="q" placeholder="search title, author, year, key   ( / )" autocomplete="off">
+  <span class="count" id="count"></span>
+  <span class="sp"></span>
+  <button id="viewList" class="primary" title="list">list</button>
+  <button id="viewGraph" title="graph">graph</button>
+  <button id="btnInbox" title="PDFs in papers/pdf without text or note">inbox<span class="badge" id="inboxN" hidden>0</span></button>
+  <button id="btnDupes" title="suspected duplicates">dupes</button>
+  <button id="btnFont" title="monospace everywhere / sans for text">Aa</button>
+  <button id="btnSize" title="text size">A+</button>
+  <button id="btnTheme" title="light / dark">◐</button>
+</header>
+
+<div class="tagbar" id="tagbar"></div>
+
+<main>
+  <div class="panel" id="inbox"></div>
+  <div class="panel" id="dupes"></div>
+  <div id="convertSt" class="muted" style="font-size:.82rem; margin:.4rem 0; display:none"></div>
+  <div id="list"></div>
+  <div id="graphWrap">
+    <svg id="graph"></svg>
+    <div class="gctl">
+      <label><input type="checkbox" id="gTags" checked> tag edges</label>
+      <label><input type="checkbox" id="gCites"> citation edges</label>
+      <label><input type="checkbox" id="gHubs"> tags as hubs</label>
+      <span class="muted" id="gN"></span>
+    </div>
+    <div class="ginfo" id="ginfo"></div>
+  </div>
+</main>
+
+<footer class="foot">
+  <label><input type="checkbox" id="selAll"> select shown</label>
+  <span class="muted" id="selN">0 selected</span>
+  <button id="btnBib">export .bib</button>
+  <button id="btnReview">make review folder</button>
+  <span class="sp"></span>
+  <span class="muted">sort</span>
+  <select id="sort"><option value="year">year ↓</option><option value="yearasc">year ↑</option><option value="title">title</option><option value="key">key</option></select>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script src="/code/vendor/d3.min.js"></script>
+<script>
+(function(){
+  const $ = s => document.querySelector(s);
+  const state = { papers:[], tags:{}, flat:{}, sel:new Set(), filter:new Set(), mode:'any', q:'', nopdf:true, view:'list', sort:'year', open:null };
+  const prefs = (()=>{ try{ return JSON.parse(localStorage.getItem('lib:prefs')||'{}'); }catch(e){ return {}; } })();
+  function savePrefs(){ try{ localStorage.setItem('lib:prefs', JSON.stringify({font:prefs.font, size:prefs.size, theme:prefs.theme, filter:[...state.filter], mode:state.mode, nopdf:state.nopdf, sort:state.sort})); }catch(e){} }
+  function applyPrefs(){
+    const r = document.documentElement;
+    r.dataset.font = prefs.font||'mono'; r.dataset.size = prefs.size||'normal';
+    const theme = prefs.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light');
+    if(theme==='dark') r.dataset.theme='dark'; else r.removeAttribute('data-theme');
+  }
+  if(prefs.filter) state.filter = new Set(prefs.filter); if(prefs.mode) state.mode = prefs.mode; if(prefs.nopdf!==undefined) state.nopdf = prefs.nopdf; if(prefs.sort) state.sort = prefs.sort;
+  applyPrefs();
+  $('#sort').value = state.sort;
+
+  let toastT; function toast(msg, bad){ const t=$('#toast'); t.textContent=msg; t.style.background = bad ? 'var(--red)' : 'var(--ink)'; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'), 2200); }
+  async function api(path, body){
+    const r = await fetch(path, body ? {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)} : undefined);
+    const ct = r.headers.get('content-type')||'';
+    const data = ct.includes('json') ? await r.json() : await r.text();
+    if(!r.ok) throw new Error((data && data.error) || r.statusText);
+    return data;
+  }
+  const esc = s => String(s??'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  const kindOf = t => state.flat[t] || 'topic';
+  const authorsShort = a => { if(!a||!a.length) return ''; const s = x => x.split(',')[0]; return a.length>2 ? s(a[0])+' et al.' : a.map(s).join(' and '); };
+
+  // ---------- load ----------
+  async function load(){
+    const idx = await api('/api/index');
+    state.papers = idx.papers; state.tags = idx.tags||{}; state.flat = {};
+    for(const [kind, m] of Object.entries(state.tags)) for(const t of Object.keys(m||{})) state.flat[t]=kind;
+    const n = idx.unprocessed.length; $('#inboxN').hidden = n===0; $('#inboxN').textContent = n;
+    state.missingText = (idx.missing_text||[]).length;
+    renderTagbar(); render();
+  }
+
+  // ---------- filtering ----------
+  function shown(){
+    const q = state.q.trim().toLowerCase();
+    let out = state.papers.filter(p=>{
+      if(!state.nopdf && !p.pdf) return false;
+      if(state.filter.size){
+        const tg = new Set(p.tags||[]);
+        const hits = [...state.filter].filter(t=>tg.has(t)).length;
+        if(state.mode==='any' ? hits===0 : hits<state.filter.size) return false;
+      }
+      if(q){
+        const hay = [p.title, (p.authors||[]).join(' '), p.year, p.key, p.journal].join(' ').toLowerCase();
+        if(!q.split(/\s+/).every(w=>hay.includes(w))) return false;
+      }
+      return true;
+    });
+    const s = state.sort;
+    out.sort((a,b)=> s==='title' ? String(a.title).localeCompare(b.title) : s==='key' ? a.key.localeCompare(b.key) : s==='yearasc' ? (a.year||0)-(b.year||0) : (b.year||0)-(a.year||0));
+    return out;
+  }
+
+  // ---------- tag bar ----------
+  function renderTagbar(){
+    const counts = {}; for(const p of state.papers) for(const t of p.tags||[]) counts[t]=(counts[t]||0)+1;
+    let h = '';
+    for(const kind of ['topic','method','object']){
+      const m = state.tags[kind]||{}; if(!Object.keys(m).length) continue;
+      h += `<span class="kind">${kind}</span>`;
+      for(const t of Object.keys(m).sort()) h += `<span class="tag ${kind} ${state.filter.has(t)?'on':''}" data-t="${t}" title="${esc(m[t])}">${t}<span class="n">${counts[t]||0}</span></span>`;
+    }
+    h += `<span class="tag" id="addTag" title="add a tag to the vocabulary">+ tag</span>`;
+    h += `<span class="ctl"><label><input type="radio" name="mode" value="any" ${state.mode==='any'?'checked':''}> any of</label><label><input type="radio" name="mode" value="all" ${state.mode==='all'?'checked':''}> all of</label><label><input type="checkbox" id="nopdf" ${state.nopdf?'checked':''}> show no-pdf</label><button id="clearF" style="font-size:.74rem">clear</button></span>`;
+    $('#tagbar').innerHTML = h;
+    $('#tagbar').querySelectorAll('.tag[data-t]').forEach(el=>el.addEventListener('click', ()=>{ const t=el.dataset.t; state.filter.has(t)?state.filter.delete(t):state.filter.add(t); savePrefs(); renderTagbar(); render(); }));
+    $('#tagbar').querySelectorAll('input[name=mode]').forEach(el=>el.addEventListener('change', ()=>{ state.mode=el.value; savePrefs(); render(); }));
+    $('#nopdf').addEventListener('change', e=>{ state.nopdf=e.target.checked; savePrefs(); render(); });
+    $('#clearF').addEventListener('click', ()=>{ state.filter.clear(); state.q=''; $('#q').value=''; savePrefs(); renderTagbar(); render(); });
+    $('#addTag').addEventListener('click', ()=>{
+      const el = $('#addTag');
+      el.outerHTML = `<span class="inline-form" id="addTagForm"><input id="ntName" placeholder="tag-name" size="12"><select id="ntKind"><option>topic</option><option>method</option><option>object</option></select><input id="ntMeaning" placeholder="one line meaning" size="24"><button id="ntOk" style="font-size:.74rem">add</button></span>`;
+      $('#ntOk').addEventListener('click', async ()=>{
+        const tag = $('#ntName').value.trim().toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+        if(!tag) return;
+        try{ await api('/api/tagdef', {tag, kind:$('#ntKind').value, meaning:$('#ntMeaning').value}); toast('tag added'); await load(); }catch(e){ toast(e.message, true); }
+      });
+      $('#ntName').focus();
+    });
+  }
+
+  // ---------- list ----------
+  function tagChips(p, editable){
+    return (p.tags||[]).map(t=>`<span class="tag ${kindOf(t)} on" data-t="${t}">${t}</span>`).join('');
+  }
+  function render(){
+    const items = shown();
+    $('#count').textContent = `${items.length} of ${state.papers.length}` + (state.missingText ? ` · ${state.missingText} without text yet` : '');
+    $('#selN').textContent = `${state.sel.size} selected`;
+    if(state.view==='graph'){ $('#list').innerHTML=''; drawGraph(items); return; }
+    const h = items.map(p=>`
+      <div class="row ${p.pdf?'':'nopdf'} ${state.open===p.key?'open':''}" data-k="${p.key}">
+        <input type="checkbox" class="sel" ${state.sel.has(p.key)?'checked':''} aria-label="select">
+        <div>
+          <div class="t">${esc(p.title)||'<i>untitled</i>'}</div>
+          <div class="m"><span>${esc(authorsShort(p.authors))}</span><span>${p.year||''}</span><span>${esc(p.journal||'')}</span><span class="key muted">${p.key}</span>${p.pdf?'':'<span class="pen-red">no pdf</span>'}${p.doc?'':(p.pdf?'<span class="pen-red">no text</span>':'')}<span class="rowtags">${tagChips(p)}</span></div>
+          <div class="detail"></div>
+        </div>
+        <div class="acts">
+          <button class="open" ${p.pdf?'':'disabled'} title="open in your reader">open pdf</button>
+          ${p.doc?`<a class="btn" href="/doc/${p.key}" target="_blank" style="font-size:.76rem; padding:.18rem .5rem; text-decoration:none">text</a>`:''}
+          ${p.doi?`<a class="btn" href="https://doi.org/${esc(p.doi)}" target="_blank" style="font-size:.76rem; padding:.18rem .5rem; text-decoration:none">doi</a>`:''}
+          <button class="note">note</button>
+        </div>
+      </div>`).join('');
+    $('#list').innerHTML = h || '<p class="muted" style="padding:2rem 0">Nothing matches. Clear a filter.</p>';
+    $('#list').querySelectorAll('.row').forEach(row=>{
+      const k = row.dataset.k, p = state.papers.find(x=>x.key===k);
+      row.querySelector('.sel').addEventListener('change', e=>{ e.target.checked?state.sel.add(k):state.sel.delete(k); $('#selN').textContent=`${state.sel.size} selected`; });
+      row.querySelector('.open').addEventListener('click', async ()=>{ try{ await api('/api/open',{key:k}); }catch(e){ toast(e.message,true); } });
+      row.querySelector('.note').addEventListener('click', ()=>toggleDetail(row, p));
+      row.querySelector('.t').addEventListener('click', ()=>toggleDetail(row, p));
+      row.querySelectorAll('.rowtags .tag').forEach(el=>el.addEventListener('click', ()=>{ state.filter.add(el.dataset.t); savePrefs(); renderTagbar(); render(); }));
+    });
+    if(state.open){ const row = $('#list').querySelector(`.row[data-k="${state.open}"]`); if(row) fillDetail(row, state.papers.find(x=>x.key===state.open)); }
+  }
+  function toggleDetail(row, p){
+    if(state.open===p.key){ state.open=null; row.classList.remove('open'); row.querySelector('.detail').innerHTML=''; return; }
+    const prev = $('#list .row.open'); if(prev){ prev.classList.remove('open'); prev.querySelector('.detail').innerHTML=''; }
+    state.open = p.key; row.classList.add('open'); fillDetail(row, p);
+  }
+  async function fillDetail(row, p){
+    const d = row.querySelector('.detail');
+    let body = '';
+    try{ const n = await api('/api/note?key='+encodeURIComponent(p.key)); body = n.body||''; }catch(e){}
+    const allTags = Object.entries(state.tags).flatMap(([kind,m])=>Object.keys(m||{}).map(t=>({t,kind})));
+    d.innerHTML = `
+      <div class="lbl">tags <span class="muted" style="text-transform:none; letter-spacing:0">(click to toggle, max 5)</span></div>
+      <div class="tags-edit">${allTags.map(({t,kind})=>`<span class="tag ${kind} ${(p.tags||[]).includes(t)?'on':''}" data-t="${t}" title="${esc((state.tags[kind]||{})[t])}">${t}</span>`).join('')}</div>
+      ${p.abstract?`<div class="lbl">abstract</div><div class="abs">${esc(p.abstract)}</div>`:''}
+      <div class="lbl">your notes <span class="muted" id="noteSt-${p.key}" style="text-transform:none; letter-spacing:0"></span></div>
+      <textarea class="notebody" placeholder="anything, or nothing">${esc(body.replace(/^\n/,''))}</textarea>
+      <div class="lbl">file</div><div class="muted" style="font-size:.8rem">papers/notes/${p.key}.md</div>`;
+    d.querySelectorAll('.tags-edit .tag').forEach(el=>el.addEventListener('click', async ()=>{
+      const t = el.dataset.t; let tags = [...(p.tags||[])];
+      if(tags.includes(t)) tags = tags.filter(x=>x!==t); else { if(tags.length>=5){ toast('max 5 tags; remove one first', true); return; } tags.push(t); }
+      try{ const r = await api('/api/tags',{key:p.key, tags}); p.tags = r.tags; el.classList.toggle('on', p.tags.includes(t)); row.querySelector('.rowtags').innerHTML = tagChips(p); renderTagbar(); }catch(e){ toast(e.message,true); }
+    }));
+    const ta = d.querySelector('.notebody'), st = d.querySelector('#noteSt-'+CSS.escape(p.key)); let t;
+    ta.addEventListener('input', ()=>{ st.textContent='unsaved'; clearTimeout(t); t=setTimeout(async ()=>{ try{ await api('/api/note',{key:p.key, body:ta.value}); st.textContent='saved'; p.note_len=ta.value.trim().length; }catch(e){ st.textContent='not saved: '+e.message; } }, 900); });
+  }
+
+  // ---------- selection actions ----------
+  $('#selAll').addEventListener('change', e=>{ const items = shown(); if(e.target.checked) items.forEach(p=>state.sel.add(p.key)); else items.forEach(p=>state.sel.delete(p.key)); render(); });
+  $('#btnBib').addEventListener('click', async ()=>{
+    const keys = state.sel.size ? [...state.sel] : shown().map(p=>p.key);
+    if(!keys.length) return toast('nothing selected', true);
+    const txt = await api('/api/export.bib?keys='+encodeURIComponent(keys.join(',')));
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([txt],{type:'text/plain'})); a.download = 'selection.bib'; a.click();
+    toast(`${keys.length} entries exported`);
+  });
+  $('#btnReview').addEventListener('click', async ()=>{
+    const keys = state.sel.size ? [...state.sel] : shown().map(p=>p.key);
+    if(!keys.length) return toast('nothing selected', true);
+    const name = window.prompt(`Review folder name for ${keys.length} papers (letters, digits, dashes):`, [...state.filter].join('-')||'');
+    if(!name) return;
+    try{ const r = await api('/api/review',{name, keys}); toast(`reviews/${name}: ${r.n} papers linked. Fill brief.md, then /review ${name} in the terminal.`); }catch(e){ toast(e.message,true); }
+  });
+
+  // ---------- search / sort / view ----------
+  let qt; $('#q').addEventListener('input', e=>{ clearTimeout(qt); qt=setTimeout(()=>{ state.q=e.target.value; render(); }, 150); });
+  document.addEventListener('keydown', e=>{ if(e.key==='/' && document.activeElement.tagName!=='INPUT' && document.activeElement.tagName!=='TEXTAREA'){ e.preventDefault(); $('#q').focus(); } });
+  $('#sort').addEventListener('change', e=>{ state.sort=e.target.value; savePrefs(); render(); });
+  function setView(v){ state.view=v; $('#viewList').classList.toggle('primary', v==='list'); $('#viewGraph').classList.toggle('primary', v==='graph'); $('#graphWrap').classList.toggle('show', v==='graph'); render(); }
+  $('#viewList').addEventListener('click', ()=>setView('list'));
+  $('#viewGraph').addEventListener('click', ()=>setView('graph'));
+  $('#btnFont').addEventListener('click', ()=>{ prefs.font = prefs.font==='sans'?'mono':'sans'; applyPrefs(); savePrefs(); });
+  $('#btnSize').addEventListener('click', ()=>{ prefs.size = prefs.size==='big'?'normal':'big'; applyPrefs(); savePrefs(); });
+  $('#btnTheme').addEventListener('click', ()=>{ prefs.theme = (document.documentElement.dataset.theme==='dark')?'light':'dark'; applyPrefs(); savePrefs(); });
+
+  // ---------- inbox (unprocessed pdfs) ----------
+  $('#btnInbox').addEventListener('click', async ()=>{ const p=$('#inbox'); if(p.classList.contains('show')){ p.classList.remove('show'); return; } $('#dupes').classList.remove('show'); await renderInbox(); p.classList.add('show'); });
+  async function renderInbox(){
+    const p = $('#inbox'); p.innerHTML = '<h2>inbox</h2><p class="muted">reading first pages…</p>';
+    const r = await api('/api/unprocessed');
+    const allTags = Object.entries(state.tags).flatMap(([kind,m])=>Object.keys(m||{}).map(t=>({t,kind})));
+    if(!r.items.length){ p.innerHTML = `<h2>inbox</h2><p class="muted">Nothing to process. Drop PDFs into papers/pdf/ and come back.${state.missingText?` ${state.missingText} papers have a pdf but no text yet; <button id="convMissing">convert them</button>`:''}</p>`; const b=$('#convMissing'); if(b) b.addEventListener('click', async ()=>{ const rr = await api('/api/unprocessed?all=1'); const jobs = rr.items.filter(x=>x.has_note).map(x=>({file:x.file, tags:[], attach_to:x.file.replace(/\.pdf$/,'')})); await api('/api/convert',{files:jobs}); toast(`${jobs.length} queued`); pollConvert(); }); return; }
+    p.innerHTML = `<h2>inbox <span class="muted" style="font-weight:400">${r.items.length} PDFs in papers/pdf without text or note</span></h2>
+      <p class="muted" style="font-size:.84rem">Pick tags, press convert. Metadata comes from the DOI on the first page (online) or the file name. If a file looks like a paper already in the library, attach it instead of creating a new entry.</p>
+      ${r.items.map((it,i)=>`<div class="item" data-i="${i}">
+        <div><div class="f">${esc(it.file)} <span class="muted">${it.size_mb} MB</span></div>
+          <div class="s">${it.has_note?'has note, missing text':''}${it.suggest?`looks like <b>${esc(it.suggest.title)}</b> <span class="muted">(${it.suggest.key}, by ${it.suggest.how}${it.suggest.has_pdf?', already has a pdf':''})</span> <label><input type="checkbox" class="attach" ${it.suggest.has_pdf?'':'checked'}> attach to it</label>`:''}</div>
+          <div class="tags-edit">${allTags.map(({t,kind})=>`<span class="tag ${kind}" data-t="${t}">${t}</span>`).join('')}</div></div>
+        <div><button class="conv primary">convert</button></div></div>`).join('')}
+      <div style="margin-top:.6rem"><button id="convAll">convert all</button></div>`;
+    p.querySelectorAll('.tags-edit .tag').forEach(el=>el.addEventListener('click', ()=>{ const on = el.parentElement.querySelectorAll('.on').length; if(!el.classList.contains('on') && on>=5) return toast('max 5', true); el.classList.toggle('on'); }));
+    const jobOf = item => { const i = +item.dataset.i, it = r.items[i]; const tags=[...item.querySelectorAll('.tag.on')].map(e=>e.dataset.t); const att = item.querySelector('.attach'); return {file:it.file, tags, attach_to: (att && att.checked && it.suggest) ? it.suggest.key : (it.has_note ? it.file.replace(/\.pdf$/,'') : null)}; };
+    p.querySelectorAll('.conv').forEach(b=>b.addEventListener('click', async ()=>{ const item=b.closest('.item'); try{ await api('/api/convert',{files:[jobOf(item)]}); item.remove(); toast('queued'); pollConvert(); }catch(e){ toast(e.message,true); } }));
+    $('#convAll').addEventListener('click', async ()=>{ const jobs=[...p.querySelectorAll('.item')].map(jobOf); try{ await api('/api/convert',{files:jobs}); toast(`${jobs.length} queued`); p.classList.remove('show'); pollConvert(); }catch(e){ toast(e.message,true); } });
+  }
+  let pollT;
+  async function pollConvert(){
+    clearTimeout(pollT);
+    const s = await api('/api/convert/status'); const el = $('#convertSt');
+    if(s.running || s.queue.length){ el.style.display='block'; el.innerHTML = `converting <b>${esc(s.current||'')}</b>, ${s.queue.length} waiting, ${s.done.length} done${s.failed.length?`, <span class="pen-red">${s.failed.length} failed</span>`:''}`; pollT=setTimeout(pollConvert, 5000); }
+    else { if(s.done.length||s.failed.length){ el.style.display='block'; el.innerHTML = `${s.done.length} converted${s.failed.length?`, <span class="pen-red">${s.failed.length} failed: ${s.failed.map(f=>esc(f.file)+' ('+esc(f.error)+')').join('; ')}</span>`:''}`; } await load(); }
+  }
+
+  // ---------- duplicates ----------
+  $('#btnDupes').addEventListener('click', async ()=>{ const p=$('#dupes'); if(p.classList.contains('show')){ p.classList.remove('show'); return; } $('#inbox').classList.remove('show'); await renderDupes(); p.classList.add('show'); });
+  async function renderDupes(){
+    const p = $('#dupes'); const r = await api('/api/dupes'); const byKey = Object.fromEntries(state.papers.map(x=>[x.key,x]));
+    if(!r.pairs.length){ p.innerHTML='<h2>duplicates</h2><p class="muted">None found by DOI or title.</p>'; return; }
+    p.innerHTML = `<h2>duplicates <span class="muted" style="font-weight:400">${r.pairs.length} suspected pairs</span></h2>` + r.pairs.map(pr=>{
+      const a=byKey[pr.a]||{}, b=byKey[pr.b]||{};
+      const side = (x,k)=>`<div><div class="f">${esc(x.title||k)}</div><div class="s">${k} · ${x.year||''} · ${x.pdf?'pdf':'<span class="pen-red">no pdf</span>'} · ${(x.tags||[]).join(', ')}</div></div>`;
+      return `<div class="item" style="grid-template-columns:1fr 1fr auto">${side(a,pr.a)}${side(b,pr.b)}<div style="display:flex; flex-direction:column; gap:.3rem"><button data-keep="${pr.a}" data-drop="${pr.b}">keep left</button><button data-keep="${pr.b}" data-drop="${pr.a}">keep right</button></div></div>`;
+    }).join('');
+    p.querySelectorAll('button[data-keep]').forEach(b=>b.addEventListener('click', async ()=>{ try{ await api('/api/merge',{keep:b.dataset.keep, drop:b.dataset.drop}); toast('merged'); await load(); await renderDupes(); }catch(e){ toast(e.message,true); } }));
+  }
+
+  // ---------- graph ----------
+  let sim;
+  const palette = ['#1f5fbf','#d7263d','#1f8a4c','#b86b00','#6a3fb5','#0e8a8a','#a4206b','#5b6b00','#8a4b2a','#2f4b7c','#c93c91','#1e8c6e'];
+  function drawGraph(items){
+    const svg = d3.select('#graph'); svg.selectAll('*').remove();
+    const W = $('#graphWrap').clientWidth, H = $('#graphWrap').clientHeight;
+    const useTags = $('#gTags').checked, useCites = $('#gCites').checked, hubs = $('#gHubs').checked;
+    const keys = new Set(items.map(p=>p.key));
+    const topics = Object.keys(state.tags.topic||{}); const color = t => palette[Math.max(0, topics.indexOf(t)) % palette.length];
+    const nodes = items.map(p=>({id:p.key, p, kind:'paper', c: color((p.tags||[]).find(t=>kindOf(t)==='topic')||'')}));
+    const links = [];
+    if(useTags){
+      if(hubs){
+        const used = new Set(items.flatMap(p=>p.tags||[]));
+        for(const t of used) nodes.push({id:'#'+t, kind:'tag', t, c: kindOf(t)==='topic'?color(t):'#888'});
+        for(const p of items) for(const t of p.tags||[]) links.push({source:p.key, target:'#'+t, w:1, kind:'tag'});
+      } else {
+        const byTag = {}; for(const p of items) for(const t of p.tags||[]) (byTag[t] ||= []).push(p.key);
+        const pair = {};
+        for(const [t, ks] of Object.entries(byTag)) if(ks.length < 80) for(let i=0;i<ks.length;i++) for(let j=i+1;j<ks.length;j++){ const id = ks[i]<ks[j] ? ks[i]+'|'+ks[j] : ks[j]+'|'+ks[i]; pair[id]=(pair[id]||0)+1; }
+        for(const [id,w] of Object.entries(pair)){ const [a,b]=id.split('|'); if(w>=2 || items.length<=120) links.push({source:a, target:b, w, kind:'tag'}); }
+      }
+    }
+    if(useCites) for(const p of items) for(const c of p.cites||[]) if(keys.has(c)) links.push({source:p.key, target:c, w:1, kind:'cite'});
+    $('#gN').textContent = `${items.length} papers, ${links.length} edges`;
+    const g = svg.append('g');
+    svg.call(d3.zoom().scaleExtent([0.2, 5]).on('zoom', e=>g.attr('transform', e.transform)));
+    const link = g.append('g').selectAll('line').data(links).join('line').attr('stroke', d=>d.kind==='cite'?'var(--red)':'var(--rule)').attr('stroke-width', d=>Math.min(4, d.w)).attr('stroke-opacity', .8);
+    const node = g.append('g').selectAll('circle').data(nodes).join('circle').attr('r', d=>d.kind==='tag'?9:5).attr('fill', d=>d.c).attr('stroke','var(--paper)').attr('stroke-width',1.2).style('cursor','pointer')
+      .call(d3.drag().on('start',(e,d)=>{ sim.alphaTarget(.3).restart(); d.fx=d.x; d.fy=d.y; }).on('drag',(e,d)=>{ d.fx=e.x; d.fy=e.y; }).on('end',(e,d)=>{ sim.alphaTarget(0); d.fx=null; d.fy=null; }));
+    const label = g.append('g').selectAll('text').data(nodes.filter(d=>d.kind==='tag')).join('text').text(d=>d.t).attr('font-size',11).attr('fill','var(--ink)').attr('dx',11).attr('dy',4);
+    node.on('click', (e,d)=>{
+      const info = $('#ginfo');
+      if(d.kind==='tag'){ state.filter.add(d.t); savePrefs(); renderTagbar(); render(); return; }
+      const p = d.p; info.classList.add('show');
+      info.innerHTML = `<b>${esc(p.title)}</b> <span class="muted">${esc(authorsShort(p.authors))} ${p.year||''} · ${p.key}</span> ${(p.tags||[]).map(t=>`<span class="tag ${kindOf(t)} on">${t}</span>`).join(' ')} ${p.pdf?`<button id="gOpen" style="margin-left:.5rem">open pdf</button>`:''} ${p.doc?`<a class="btn" href="/doc/${p.key}" target="_blank" style="text-decoration:none">text</a>`:''}`;
+      const b = $('#gOpen'); if(b) b.addEventListener('click', async ()=>{ try{ await api('/api/open',{key:p.key}); }catch(err){ toast(err.message,true); } });
+    }).append('title').text(d=>d.kind==='tag'?d.t:`${d.p.title}\n${authorsShort(d.p.authors)} ${d.p.year||''}`);
+    sim = d3.forceSimulation(nodes).force('link', d3.forceLink(links).id(d=>d.id).distance(d=>d.kind==='tag' && hubs ? 40 : 30).strength(d=>Math.min(1, .15*d.w)))
+      .force('charge', d3.forceManyBody().strength(d=>d.kind==='tag'?-200:-40)).force('center', d3.forceCenter(W/2, H/2)).force('collide', d3.forceCollide(8))
+      .on('tick', ()=>{ link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y).attr('x2',d=>d.target.x).attr('y2',d=>d.target.y); node.attr('cx',d=>d.x).attr('cy',d=>d.y); label.attr('x',d=>d.x).attr('y',d=>d.y); });
+  }
+  ['gTags','gCites','gHubs'].forEach(id=>$('#'+id).addEventListener('change', ()=>render()));
+
+  load().then(pollConvert).catch(e=>{ $('#list').innerHTML = `<p class="pen-red">Could not reach the helper: ${esc(e.message)}. Start it with code/start.sh.</p>`; });
+})();
+</script>
+</body>
+</html>

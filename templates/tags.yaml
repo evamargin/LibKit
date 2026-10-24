@@ -1,0 +1,44 @@
+# tags.yaml — the whole vocabulary. One line each: tag: what it means.
+# Three kinds. A paper gets at most 5 tags, usually 2 to 4. Rename or delete freely;
+# then run  python3 code/retag.py  to apply renames to every note.
+
+topic:
+  remapping: place or grid maps change between contexts, environments or tasks
+  drift: representations change over days without a context change
+  place-cells: hippocampal place coding, place fields, CA1 CA3 spatial code
+  grid-cells: entorhinal grid cells and other spatially periodic codes
+  head-direction: head direction cells and allocentric vs egocentric frames
+  path-integration: self-motion integration, dead reckoning, darkness
+  navigation: goals, routes, vector fields, spatial behaviour
+  memory: episodic and spatial memory, consolidation, schemas, cognitive maps
+  working-memory: short-term maintenance, delay activity, persistent activity
+  replay: offline reactivation, sharp-wave ripples, preplay
+  sequences: theta sequences, sweeps, phase precession, ordered activity
+  theta: theta rhythm, its generation and its coupling
+  oscillations: gamma, ripples, LFP, cross-frequency coupling, brain states
+  assemblies: cell assemblies, synchrony, co-activation
+  population-coding: manifolds, geometry, dimensionality reduction, representational geometry
+  connectivity: synapses from spikes, cross-correlograms, circuits and cell types
+  plasticity: synaptic plasticity, learning rules, synaptic mechanisms
+  motor-learning: motor cortex, skill learning, adaptation
+  social: social learning, social memory, CA2
+  decision-making: choice, value, reward prediction error, reinforcement learning
+  time: time cells, interval timing, temporal context
+  dopamine: dopamine, VTA, novelty signals
+  sleep: sleep stages and their role in memory
+  theory: conceptual, mathematical or computational theory papers
+
+method:
+  electrophysiology: extracellular recordings, probes, spike sorting, LFP
+  imaging: calcium imaging, two-photon, miniscopes, voltage imaging
+  optogenetics: optogenetic or chemogenetic manipulation
+  modelling: network models, RNNs, normative or Bayesian models
+  methods: analysis methods, statistics, software, tools
+  review: review, perspective or opinion article
+
+object:
+  hippocampus: hippocampus, CA1, CA2, CA3, dentate gyrus
+  entorhinal: medial and lateral entorhinal cortex
+  prefrontal: prefrontal and orbitofrontal cortex
+  striatum: striatum, basal ganglia
+  human: human participants, fMRI, intracranial, behaviour in humans

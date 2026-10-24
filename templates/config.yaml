@@ -1,0 +1,8 @@
+# lib configuration. Everything has a default; delete a line to get it back.
+key_format: "{author}-{year}-{title2}"   # english-2017-pyramidal-interneuron
+max_tags: 5
+pdf_opener: xdg-open                     # your system default reader; or: evince, okular, firefox
+citation_style: nature                   # reference list style in generated reviews: nature | apa | neuron
+graph_edges: tags                        # default edges in the graph: tags | citations | both
+port: 8765
+backup_remote: "gdrive:lib"              # rclone remote:folder for code/backup.sh

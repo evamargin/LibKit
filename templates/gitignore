@@ -1,0 +1,11 @@
+# heavy or regenerable: backed up with code/backup.sh, not git
+papers/pdf/
+papers/doc/
+books/
+reviews/*/papers/
+reviews/*/figures/
+import/tagbatches/
+.helper.log
+index.json
+# the kit lives in its own repo (LibKit)
+code/
