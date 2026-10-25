@@ -3,7 +3,7 @@
 The code behind a local, offline paper library: PDFs in, markdown text out, tags and notes in plain files, one local page to filter, tag, open and graph, and a terminal (Claude Code) for questions and reviews. Standard library Python plus pyyaml; docling for PDF conversion.
 
 ```
-git clone <this repo> ~/lib/code
+git clone https://github.com/evamargin/LibKit.git ~/lib/code
 ~/lib/code/init.sh          creates the folders, config.yaml, tags.yaml, CLAUDE.md, README.md
 ~/lib/code/start.sh         helper on http://localhost:8765 and opens the page
 ```
